@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#5b3fd1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Letterdief">
+  <meta name="description" content="De Letterdief: een leesspel voor kinderen van 4 tot 6 jaar. Pak de letters terug van Snaai! Werkt offline op de iPad.">
+  <title>De Letterdief</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" href="./assets/icon-192.png">
+  <link rel="apple-touch-icon" href="./assets/icon-180.png">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./js/game.js"></script>
+</head>
+<body>
+  <div id="app">
+    <canvas id="world" aria-label="Speelveld"></canvas>
+
+    <div id="hud" class="hidden">
+      <button id="btn-pause" class="round small" aria-label="Pauze">⏸</button>
+      <div id="wordcard"><span class="pic"></span><span class="slots"></span></div>
+      <button id="btn-replay" class="round small" aria-label="Nog eens horen">🔊</button>
+      <div id="chase" aria-hidden="true"><canvas class="me"></canvas><div class="bar"><i></i></div><span class="thief">🦝</span></div>
+      <div id="coins" aria-label="Muntjes">🪙 <b>0</b></div>
+      <div id="dots"></div>
+      <div id="lives" class="hidden"></div>
+    </div>
+
+    <section id="scr-title" class="screen">
+      <canvas class="title-snaai"></canvas>
+      <h1 class="logo"><span>De</span> Letterdief</h1>
+      <button id="btn-start" class="big-play" aria-label="Start">▶</button>
+      <p class="tagline">Pak de letters terug van Snaai!</p>
+      <p id="loadinfo" class="loadinfo"></p>
+    </section>
+
+    <section id="scr-profiles" class="screen hidden">
+      <h2 class="icon-title">👋</h2>
+      <div id="profile-list" class="profile-list"></div>
+      <button class="corner-parent round small" data-gate="parent" aria-label="Voor ouders">⚙️</button>
+    </section>
+
+    <section id="scr-newprofile" class="screen hidden">
+      <canvas id="new-hero" class="hero-preview"></canvas>
+      <div id="color-list" class="color-list"></div>
+      <div class="row-buttons">
+        <button id="btn-new-back" class="round" aria-label="Terug">⬅️</button>
+        <button id="btn-new-ok" class="round go" aria-label="Klaar">✔️</button>
+      </div>
+    </section>
+
+    <section id="scr-map" class="screen hidden">
+      <header class="map-top">
+        <button id="btn-profiles" class="round small me-btn" aria-label="Andere speler"><canvas></canvas></button>
+        <div class="map-title"><button id="world-prev" class="round small" aria-label="Vorige wereld">◀</button><h2 id="world-name"></h2><button id="world-next" class="round small" aria-label="Volgende wereld">▶</button></div>
+        <div class="pill" aria-label="Muntjes">🪙 <b id="map-coins">0</b></div>
+      </header>
+      <div id="map-path" class="map-path"></div>
+      <nav class="map-bottom">
+        <button id="btn-book" class="round" aria-label="Woordenboek">📖</button>
+        <button id="btn-endless" class="round" aria-label="Vrij rennen">🏃</button>
+        <button id="btn-shop" class="round" aria-label="Winkel">🛍️</button>
+        <button class="round small" data-gate="parent" aria-label="Voor ouders">⚙️</button>
+      </nav>
+    </section>
+
+    <section id="scr-book" class="screen hidden">
+      <header class="sub-top"><button class="round small back" aria-label="Terug">⬅️</button><h2>📖 <span id="book-count"></span></h2><span></span></header>
+      <div id="book-grid" class="book-grid"></div>
+    </section>
+
+    <section id="scr-shop" class="screen hidden">
+      <header class="sub-top"><button class="round small back" aria-label="Terug">⬅️</button><h2>🛍️</h2><div class="pill">🪙 <b id="shop-coins">0</b></div></header>
+      <div class="shop-body">
+        <canvas id="shop-hero" class="hero-preview"></canvas>
+        <div id="shop-grid" class="shop-grid"></div>
+      </div>
+    </section>
+
+    <section id="scr-parent" class="screen hidden parent">
+      <header class="sub-top"><button class="round small back" aria-label="Terug">⬅️</button><h2>Voor ouders</h2><span id="parent-version"></span></header>
+      <div id="parent-body" class="parent-body"></div>
+    </section>
+
+    <div id="overlay" class="hidden"><div id="panel"></div></div>
+    <div id="flyers"></div>
+    <div id="toast" role="status"></div>
+  </div>
+  <noscript>Zet JavaScript aan om De Letterdief te spelen.</noscript>
+</body>
+</html>

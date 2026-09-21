@@ -1,0 +1,17 @@
+{
+  "id": "./",
+  "name": "De Letterdief",
+  "short_name": "Letterdief",
+  "description": "Leesspel voor kinderen van 4 tot 6 jaar: pak de letters terug van Snaai!",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#7c5cff",
+  "theme_color": "#5b3fd1",
+  "lang": "nl",
+  "icons": [
+    { "src": "./assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
