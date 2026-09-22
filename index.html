@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#5b3fd1">
+  <meta name="theme-color" content="#245f58">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -31,15 +31,24 @@
     </div>
 
     <section id="scr-title" class="screen">
-      <canvas class="title-snaai"></canvas>
-      <h1 class="logo"><span>De</span> Letterdief</h1>
-      <button id="btn-start" class="big-play" aria-label="Start">▶</button>
-      <p class="tagline">Pak de letters terug van Snaai!</p>
-      <p id="loadinfo" class="loadinfo"></p>
+      <div class="title-copy">
+        <p class="title-eyebrow"><span aria-hidden="true">✦</span> Een vrolijk letteravontuur</p>
+        <h1 class="logo"><span>De</span> Letterdief<span class="logo-swish" aria-hidden="true"></span></h1>
+        <p class="tagline">Snaai heeft de letters gepikt.<br>Pak jij ze terug?</p>
+        <button id="btn-start" class="big-play" aria-label="Start"><span class="play-icon" aria-hidden="true">▶</span><span>Spelen</span></button>
+        <p class="title-footnote">Luister, ontdek en lees mee</p>
+      </div>
+      <div class="title-art" aria-hidden="true">
+        <div class="title-halo"></div>
+        <span class="letter-sticker letter-m">m</span><span class="letter-sticker letter-a">a</span><span class="letter-sticker letter-s">s</span>
+        <canvas class="title-snaai"></canvas>
+        <div class="snaai-label">Dit is Snaai <span>↗</span></div>
+      </div>
+      <p id="loadinfo" class="loadinfo" role="status"></p>
     </section>
 
     <section id="scr-profiles" class="screen hidden">
-      <h2 class="icon-title">👋</h2>
+      <h2 class="icon-title"><span aria-hidden="true">✦</span> Wie speelt er mee?</h2>
       <div id="profile-list" class="profile-list"></div>
       <button class="corner-parent round small" data-gate="parent" aria-label="Voor ouders">⚙️</button>
     </section>
@@ -60,10 +69,10 @@
         <div class="pill" aria-label="Muntjes">🪙 <b id="map-coins">0</b></div>
       </header>
       <div id="map-path" class="map-path"></div>
-      <nav class="map-bottom">
-        <button id="btn-book" class="round" aria-label="Woordenboek">📖</button>
-        <button id="btn-endless" class="round" aria-label="Vrij rennen">🏃</button>
-        <button id="btn-shop" class="round" aria-label="Winkel">🛍️</button>
+      <nav class="map-bottom" aria-label="Ontdekken">
+        <button id="btn-book" class="round nav-card" aria-label="Woordenboek"><span aria-hidden="true">📖</span><span class="nav-label">Mijn woorden</span></button>
+        <button id="btn-endless" class="round nav-card" aria-label="Vrij rennen"><span aria-hidden="true">🏃</span><span class="nav-label">Vrij rennen</span></button>
+        <button id="btn-shop" class="round nav-card" aria-label="Winkel"><span aria-hidden="true">🛍️</span><span class="nav-label">Winkel</span></button>
         <button class="round small" data-gate="parent" aria-label="Voor ouders">⚙️</button>
       </nav>
     </section>

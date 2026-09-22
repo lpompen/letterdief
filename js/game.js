@@ -13,6 +13,20 @@ const $$ = sel => [...document.querySelectorAll(sel)];
 const params = new URLSearchParams(location.search);
 const QA = params.has('qa');
 
+// Kleine diagnose van de laatste sessie, zonder spelersnamen of voortgang.
+const runLog = [];
+function logRun(event, detail = {}) {
+  const entry = { time: new Date().toISOString(), version: VERSION, event, ...detail };
+  runLog.push(entry);
+  if (runLog.length > 150) runLog.shift();
+  try { localStorage.setItem('letterdief-latest-run', JSON.stringify(runLog)); } catch (e) { /* opslag vol */ }
+  if (['127.0.0.1', 'localhost'].includes(location.hostname)) {
+    fetch('./api/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(entry) }).catch(() => {});
+  }
+}
+addEventListener('error', e => logRun('error', { message: e.message, file: e.filename?.split('/').pop(), line: e.lineno }));
+addEventListener('unhandledrejection', e => logRun('rejection', { message: String(e.reason?.stack || e.reason).slice(0, 2500) }));
+
 const audio = new AudioSys();
 const renderer = new Renderer($('#world'));
 const S = {
@@ -24,6 +38,7 @@ const wordByW = Object.fromEntries(WORDS.map(w => [w.w, w]));
 // ---------------- hulpjes ----------------
 function show(name) {
   S.screen = name;
+  logRun('screen', { screen: name });
   $$('.screen').forEach(s => s.classList.toggle('hidden', s.id !== 'scr-' + name));
   $('#hud').classList.toggle('hidden', name !== 'run');
   S.chars = S.chars.filter(c => c.canvas.isConnected && !c.canvas.closest('.hidden'));
@@ -56,6 +71,11 @@ const unlockedWorld = w => w === 0 || S.data.settings.allOpen || (S.profile && (
 
 // ---------------- opstarten ----------------
 async function boot() {
+  const versionBadge = document.createElement('span');
+  versionBadge.id = 'app-version'; versionBadge.textContent = 'v' + VERSION;
+  $('#app').appendChild(versionBadge);
+  document.title = 'De Letterdief · v' + VERSION;
+  logRun('boot', { qa: QA });
   renderer.resize();
   renderer.setTheme(WORLDS[0]);
   addEventListener('resize', () => { renderer.resize(); if (S.screen === 'map') renderMap(); });
@@ -64,6 +84,7 @@ async function boot() {
   requestAnimationFrame(loop);
   const fontsReady = document.fonts ? Promise.race([document.fonts.load(`700 40px ${FONT}`), wait(2500)]) : Promise.resolve();
   await Promise.all([audio.init(), fontsReady]);
+  logRun('audio-ready', { clips: Object.keys(audio.clips).length });
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const standalone = navigator.standalone || matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches;
   $('#loadinfo').textContent = ios && !standalone ? 'Tip voor ouders: Deel ⬆︎ → Zet op beginscherm, dan werkt het spel ook zonder internet.' : '';
@@ -327,6 +348,7 @@ function makeRun(kind, spec) {
   return { kind, spec, director, runner, rng, state: 'intro', rowToken: 0, row: null, rowAt: 0, glowAfter: null, misses: 0, lives: 3, newStickers: [], startedAt: performance.now(), over: false, tutorial: false };
 }
 async function startLevel(spec) {
+  logRun('level-start', { level: spec.id });
   const run = makeRun('level', spec);
   S.run = run;
   renderer.setTheme(WORLDS[spec.world]);
@@ -621,7 +643,13 @@ async function celebrate(run, res) {
 function highlight(key, dur, word) {
   const slots = $$('#wordcard .slot');
   if (key.startsWith('z:')) {
-    const t = audio.timing(key) || word.g.map((_, i) => i / word.g.length);
+    const t = audio.timing(key);
+    // Natuurlijk uitgesproken woorden hebben geen betrouwbare lettertijdstippen.
+    if (!t) {
+      slots.forEach(s => s.classList.add('lit'));
+      setTimeout(() => slots.forEach(s => s.classList.remove('lit')), dur * 1000);
+      return;
+    }
     slots.forEach((s, i) => {
       setTimeout(() => { slots.forEach(x => x.classList.remove('lit')); s.classList.add('lit'); }, (t[i] || 0) * dur * 1000);
     });
@@ -867,7 +895,7 @@ function goParent(tabId = null) {
     <p>1. Open deze pagina één keer in Safari mét internet en wacht tot hieronder "Offline klaar" staat.<br>2. Tik op <b>Deel</b> (vierkantje met pijl) → <b>Zet op beginscherm</b>.<br>3. Start De Letterdief voortaan vanaf het beginscherm; hij werkt dan zonder internet.</p>
     <p>Status: <b>${S.swReady ? '✅ Offline klaar' : navigator.onLine ? '⏳ nog bezig of niet beschikbaar in deze modus' : '📴 offline'}</b> · versie ${VERSION}</p>
     <h3>Over het spel</h3>
-    <p class="small-note">De letters volgen de volgorde van Veilig Leren Lezen (kim-versie). Het spel zegt klanken (mmm) en geen letternamen (em), past de moeilijkheid aan naar ongeveer 80% goed, en straft fouten niet maar doet het goede antwoord voor. Advies: 10–15 minuten per dag. Stem: Piper TTS (nl_NL "pim"), lettertype Andika (SIL OFL).</p>`;
+    <p class="small-note">De letters volgen de volgorde van Veilig Leren Lezen (kim-versie). Het spel zegt klanken (mmm) en geen letternamen (em), past de moeilijkheid aan naar ongeveer 80% goed, en doet het goede antwoord voor. Advies: 10–15 minuten per dag. Woorden en zinnen: Nederlandse stemmen Fenna en Maarten. Losse klanken: fonetische spraak. Alle opnamen werken offline. Lettertype Andika (SIL OFL).</p>`;
   body.appendChild(info);
   const danger = el('section');
   danger.innerHTML = '<h3>Beheer</h3>';
@@ -960,4 +988,4 @@ function exposeQA() {
   window.ld = { S, audio, renderer, WORDS, LEVELS, startLevel, startEndless, goMap, goBook, goShop, goParent, pickProfile, levelById: id => LEVELS.find(l => l.id === id) };
 }
 
-boot();
+boot().catch(e => { logRun('boot-failed', { message: String(e.stack || e) }); $('#loadinfo').textContent = 'Het laden is niet gelukt. Vernieuw de pagina om opnieuw te proberen.'; });

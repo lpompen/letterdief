@@ -11,11 +11,13 @@ export class AudioSys {
     this.clips = {}; this.texts = {}; this.base = './audio/';
     this.muted = false; this.musicOn = true; this.seq = 0; this.sources = [];
     this.voiceGain = null; this.sfxGain = null; this.musicGain = null;
-    this.musicTimer = null; this.musicWorld = -1; this.duck = 1;
+    this.musicTimer = null; this.musicWorld = -1; this.ducked = false;
+    this.cancelPending = new Set(); this.utterance = null;
   }
   async init(url = './audio/manifest.json') {
     try {
       const res = await fetch(url);
+      if (!res.ok) throw new Error(`audio manifest: HTTP ${res.status}`);
       const data = await res.json();
       this.clips = data.clips || {}; this.texts = data.texts || {};
     } catch (e) { console.warn('audio manifest ontbreekt', e); }
@@ -28,10 +30,10 @@ export class AudioSys {
     if (!this.ctx) {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
-      try { this.ctx = new AC({ sampleRate: 22050 }); } catch (e) { this.ctx = new AC(); }
+      this.ctx = new AC(); // Native device rate; preserve the 24 kHz voice recordings.
       const master = this.ctx.createGain(); master.connect(this.ctx.destination); this.master = master;
       this.voiceGain = this.ctx.createGain(); this.voiceGain.connect(master);
-      this.sfxGain = this.ctx.createGain(); this.sfxGain.gain.value = 0.55; this.sfxGain.connect(master);
+      this.sfxGain = this.ctx.createGain(); this.sfxGain.gain.value = 0.4; this.sfxGain.connect(master);
       this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = 0.0; this.musicGain.connect(master);
       this.noise = this.makeNoise();
     }
@@ -54,11 +56,15 @@ export class AudioSys {
   fetchClip(name) {
     if (this.buffers.has(name)) return Promise.resolve(this.buffers.get(name));
     if (this.pending.has(name)) return this.pending.get(name);
-    const p = fetch(this.base + this.clips[name].f)
+    if (!this.ctx || !this.clips[name]) return Promise.resolve(null);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    const p = fetch(this.base + this.clips[name].f, { signal: controller.signal })
       .then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
       .then(buf => new Promise((ok, fail) => this.ctx.decodeAudioData(buf, ok, fail)))
       .then(audio => { this.buffers.set(name, audio); this.pending.delete(name); this.trim(); return audio; })
-      .catch(e => { this.pending.delete(name); console.warn('clip', name, e); return null; });
+      .catch(e => { this.pending.delete(name); console.warn('clip', name, e); return null; })
+      .finally(() => clearTimeout(timeout));
     this.pending.set(name, p);
     return p;
   }
@@ -71,70 +77,98 @@ export class AudioSys {
   }
   stopSpeech() {
     this.seq++;
+    for (const cancel of [...this.cancelPending]) cancel();
     for (const s of this.sources) { try { s.stop(); } catch (e) { /* al gestopt */ } }
     this.sources = [];
     if (window.speechSynthesis) window.speechSynthesis.cancel();
+    this.utterance = null;
     this.setDuck(false);
   }
   setDuck(on) {
+    this.ducked = on;
     if (!this.musicGain) return;
-    const v = this.musicOn && !this.muted ? (on ? 0.035 : 0.09) : 0;
+    const v = this.musicOn && !this.muted ? (on ? 0.012 : 0.065) : 0;
     this.musicGain.gain.setTargetAtTime(v, this.ctx.currentTime, 0.15);
+    this.sfxGain.gain.setTargetAtTime(on ? 0.12 : 0.4, this.ctx.currentTime, 0.06);
+  }
+  // Every speech wait can be cancelled immediately, including loading and gaps.
+  cancellable(promise, id) {
+    if (id !== this.seq) return Promise.resolve(null);
+    return new Promise(resolve => {
+      const cancel = () => finish(null);
+      const finish = value => { this.cancelPending.delete(cancel); resolve(value); };
+      this.cancelPending.add(cancel);
+      promise.then(finish, () => finish(null));
+    });
   }
   // Speelt een reeks fragmenten na elkaar; een nieuwe say() onderbreekt de vorige.
-  async say(keys, { onClip = null, gap = 0.09 } = {}) {
+  async say(keys, { onClip = null, gap = 0.13 } = {}) {
     this.stopSpeech();
     const id = this.seq;
     if (!keys || !keys.length) return true;
-    if (!this.ctx || this.muted) return true;
+    if (this.muted) return true;
+    if (this.ctx?.state === 'suspended') await this.cancellable(this.ctx.resume(), id);
+    if (id !== this.seq) return false;
     this.setDuck(true);
-    await this.load(keys);
-    for (const key of keys) {
+    let succeeded = true;
+    try { for (const key of keys) {
       if (id !== this.seq) return false;
-      if (typeof key === 'number') { await wait(key * 1000); continue; }
+      if (typeof key === 'number') { await this.cancellable(wait(key * 1000), id); continue; }
       const name = clipName(key);
-      const buf = this.buffers.get(name);
+      const buf = await this.cancellable(this.fetchClip(name), id);
+      if (id !== this.seq) return false;
       if (buf) {
         if (onClip) onClip(key, buf.duration);
-        await this.playBuffer(buf, id);
+        if (!await this.playBuffer(buf, id)) succeeded = false;
       } else {
-        const text = this.texts[name] || (key.includes(':') ? key.split(':')[1] : key);
-        if (onClip) onClip(key, 0.8);
-        await this.speak(text, id);
+        // A missing phoneme must never be spoken as the alphabet name ("em").
+        const text = name.startsWith('k_') ? '' : (this.texts[name] || (/^[wz]_/.test(name) ? name.slice(2) : ''));
+        if (!text || !await this.speak(text, id, duration => onClip?.(key, duration))) succeeded = false;
       }
       if (id !== this.seq) return false;
-      await wait(gap * 1000);
+      await this.cancellable(wait(gap * 1000), id);
     }
-    if (id === this.seq) this.setDuck(false);
-    return id === this.seq;
+    return succeeded && id === this.seq;
+    } finally { if (id === this.seq) this.setDuck(false); }
   }
   playBuffer(buf, id) {
     return new Promise(done => {
-      if (id !== this.seq) return done();
+      if (id !== this.seq) return done(false);
       const s = this.ctx.createBufferSource();
       s.buffer = buf; s.connect(this.voiceGain);
       this.sources.push(s);
       let finished = false;
-      const end = () => { if (finished) return; finished = true; this.sources = this.sources.filter(x => x !== s); done(); };
-      s.onended = end;
-      // Vangnet: als onended niet komt (achtergrond), toch doorgaan.
-      setTimeout(end, buf.duration * 1000 + 400);
-      s.start();
+      let timer;
+      const end = success => { if (finished) return; finished = true; clearTimeout(timer); this.cancelPending.delete(cancel); this.sources = this.sources.filter(x => x !== s); s.disconnect(); done(success); };
+      const cancel = () => { try { s.stop(); } catch (e) {} end(false); };
+      this.cancelPending.add(cancel);
+      s.onended = () => end(id === this.seq);
+      timer = setTimeout(cancel, buf.duration * 1000 + 2500);
+      try { s.start(); } catch (e) { end(false); }
     });
   }
-  speak(text, id) {
+  async speak(text, id, onStart = null) {
+    const synth = window.speechSynthesis;
+    if (!synth || id !== this.seq || !text) return false;
+    if (!synth.getVoices().length) await this.cancellable(wait(350), id);
+    if (id !== this.seq) return false;
+    const voices = synth.getVoices().filter(v => /^nl(?:-|_)/i.test(v.lang || ''));
+    const score = v => (/^nl[-_]NL$/i.test(v.lang) ? 4 : 0) + (/natural|neural|fenna|colette|maarten/i.test(v.name) ? 2 : 0);
+    voices.sort((a, b) => score(b) - score(a));
+    if (!voices.length) { console.warn('Geen Nederlandse reservestem beschikbaar'); return false; }
     return new Promise(done => {
-      const synth = window.speechSynthesis;
-      if (!synth || id !== this.seq) return done();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'nl-NL'; u.rate = 0.9;
-      const voice = synth.getVoices().find(v => v.lang && v.lang.replace('_', '-').toLowerCase().startsWith('nl'));
-      if (voice) u.voice = voice;
+      this.utterance = u;
+      u.lang = voices[0].lang; u.voice = voices[0]; u.rate = 0.86; u.volume = 1; u.pitch = 1;
       let finished = false;
-      const end = () => { if (!finished) { finished = true; done(); } };
-      u.onend = end; u.onerror = end;
-      setTimeout(end, 600 + text.length * 110);
-      synth.speak(u);
+      let timer;
+      const end = success => { if (!finished) { finished = true; clearTimeout(timer); this.cancelPending.delete(cancel); if (this.utterance === u) this.utterance = null; done(success); } };
+      const cancel = () => { synth.cancel(); end(false); };
+      this.cancelPending.add(cancel);
+      u.onstart = () => onStart?.(Math.max(0.8, text.length * 0.075));
+      u.onend = () => end(id === this.seq); u.onerror = () => end(false);
+      timer = setTimeout(cancel, Math.max(6000, 2500 + text.length * 180));
+      try { synth.speak(u); } catch (e) { end(false); }
     });
   }
 
@@ -204,7 +238,7 @@ export class AudioSys {
     const melody = Array.from({ length: 16 }, (_, i) => (i % 4 === 3 && rnd() < 0.5 ? null : scale[Math.floor(rnd() * scale.length)] + (rnd() < 0.3 ? 12 : 0)));
     const bass = [0, 0, 7, 7, 5, 5, 7, 4];
     const midi = n => 440 * Math.pow(2, (n - 69) / 12);
-    this.setDuck(false);
+    this.setDuck(this.ducked);
     this.musicTimer = setInterval(() => {
       if (!this.ctx || this.ctx.state !== 'running') return;
       while (next < this.ctx.currentTime + 0.3) {
@@ -229,7 +263,7 @@ export class AudioSys {
     s.connect(f); f.connect(g); g.connect(this.musicGain); s.start(t, Math.random() * 0.5); s.stop(t + 0.06);
   }
   stopMusic() { if (this.musicTimer) clearInterval(this.musicTimer); this.musicTimer = null; this.musicWorld = -1; }
-  setMusic(on) { this.musicOn = on; this.setDuck(false); }
+  setMusic(on) { this.musicOn = on; this.setDuck(this.ducked); }
 }
 
 export const wait = ms => new Promise(r => setTimeout(r, ms));

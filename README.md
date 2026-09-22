@@ -11,4 +11,4 @@ Veilig Leren Lezen, met klanken (mmm) in plaats van letternamen, een adaptief ni
 3. Open het spel vanaf het beginscherm; daarna werkt het ook zonder internet.
 
 Stem: Piper TTS (nl_NL pim/ronnie). Lettertype: Andika (SIL Open Font License). Deze repository bevat alleen de
-gepubliceerde spelbestanden (v1.0.0).
+gepubliceerde spelbestanden (v1.1.0).

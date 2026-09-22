@@ -1,6 +1,6 @@
 /* De Letterdief: alle spelbestanden + spraak in één cache, zodat het spel offline werkt. */
 'use strict';
-const CACHE = 'letterdief-v1.0.0-4336090b46';
+const CACHE = 'letterdief-v1.1.0-227ae7273d';
 const CORE = ['./', './index.html', './style.css', './manifest.webmanifest', './js/game.js', './js/data.js', './js/words.js', './js/learn.js', './js/level.js', './js/engine.js', './js/audio.js', './js/render.js', './js/storage.js', './assets/andika-regular.woff2', './assets/andika-bold.woff2', './assets/icon-180.png', './assets/icon-192.png', './assets/icon-512.png', './audio/manifest.json'];
 self.addEventListener('install', event => event.waitUntil((async () => {
   const cache = await caches.open(CACHE);

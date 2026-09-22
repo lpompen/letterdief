@@ -1,5 +1,5 @@
 // De Letterdief — vaste inhoud: klanken, werelden, levels en gesproken zinnen.
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0';
 
 // Lettervolgorde volgens Veilig Leren Lezen (kim-versie), één wereld per kern.
 // Binnen wereld 0 eerst m en s: die klanken zijn te rekken en dus het best hoorbaar voor kleuters.
