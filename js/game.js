@@ -1,5 +1,5 @@
 // De Letterdief — schermen, spelflow en invoer.
-import { VERSION, WORLDS, LEVELS, levelsFor, COLORS, SHOP, PHRASES, GRAPHEMES, WORLD_OF } from './data.js';
+import { VERSION, WORLDS, LEVELS, levelsFor, COLORS, SHOP, PHRASES, GRAPHEMES, WORLD_OF, KERN3 } from './data.js';
 import { WORDS, KEYWORDS } from './words.js';
 import { introduced, mastery, mulberry32 } from './learn.js';
 import { LevelDirector, isReadable } from './level.js';
@@ -343,8 +343,10 @@ function makeRun(kind, spec) {
   const seed = (Date.now() ^ (Math.random() * 1e9)) >>> 0;
   const rng = mulberry32(seed);
   const director = new LevelDirector(L, spec, WORDS, rng, { endless: kind === 'endless' });
-  const speed = 6.2 + L.diff * 2.6 + (spec.speed || 0) * 4;
-  const runner = new Runner({ rng, speed, escape: kind === 'level' && st.escape && spec.kind !== 'intro', obstacles: kind === 'endless' ? 0.75 : 0.35 + spec.idx * 0.07 + (spec.world || 0) * 0.03 });
+  // Iets pittiger dan v1.1, maar nog passend bij 5-6 jaar: een kleine
+  // snelheidsstap en geleidelijk meer obstakels, met dezelfde foutenhulp.
+  const speed = 6.5 + L.diff * 2.8 + (spec.speed || 0) * 4.4;
+  const runner = new Runner({ rng, speed, escape: kind === 'level' && st.escape && spec.kind !== 'intro', obstacles: kind === 'endless' ? 0.85 : 0.42 + spec.idx * 0.075 + (spec.world || 0) * 0.035 });
   return { kind, spec, director, runner, rng, state: 'intro', rowToken: 0, row: null, rowAt: 0, glowAfter: null, misses: 0, lives: 3, newStickers: [], startedAt: performance.now(), over: false, tutorial: false };
 }
 async function startLevel(spec) {
@@ -844,7 +846,7 @@ function goParent(tabId = null) {
     const lees = Object.entries(L.words).filter(([, s]) => s.c > 0).length;
     const sec = el('section');
     sec.innerHTML = `<h3>Speler</h3>
-      <label>Naam (verschijnt onder het monster) <input type="text" maxlength="14" value="${(p.name || '').replace(/"/g, '')}"></label>
+      <label>Naam van de letteragent <input type="text" maxlength="14" value="${(p.name || '').replace(/"/g, '')}"></label>
       <p>⭐ ${totalStars} sterren · 📖 ${stickers} van ${WORDS.length} woorden verzameld · ${lees} verschillende woorden goed gelezen/gebouwd · 🪙 ${p.coins} munten · 🏃 record ${p.best || 0} m</p>
       <p>Vandaag gespeeld: ${Math.round((p.playDay === today() ? p.playMsToday || 0 : 0) / 60000)} min · totaal ${Math.round((p.playedMs || 0) / 60000)} min · ${p.days.length} ${p.days.length === 1 ? 'dag' : 'dagen'} gespeeld · moeilijkheid nu ${Math.round(L.diff * 100)}%</p>`;
     sec.querySelector('input').addEventListener('change', e => { p.name = e.target.value.trim(); persist(); });
@@ -869,6 +871,12 @@ function goParent(tabId = null) {
     const conf = Object.entries(L.conf).sort((a, b) => b[1] - a[1]).slice(0, 6);
     if (conf.length) ms.appendChild(el('p', '', 'Vaakst verwisseld: ' + conf.map(([k, n]) => `${k.replace('>', ' ↔ ')} (${n}×)`).join(', ')));
     body.appendChild(ms);
+    const kern = el('section');
+    kern.innerHTML = `<h3>Kern 3 · ${KERN3.theme}</h3>
+      <p>Nieuwe klanken: <b>${KERN3.letters.join(' · ')}</b></p>
+      <p class="small-note">Het spel oefent korte, eenlettergrepige woorden uit de brief, waaronder ${KERN3.practice.slice(0, 11).join(', ')}. Themawoorden zoals ${KERN3.practice.slice(11).join(', ')} sluiten aan bij ziek zijn, je lijf en gevoelens.</p>
+      <p class="small-note">Bonus voor kinderen die al verder zijn: ${KERN3.stretch.join(', ')}. Deze woorden verschijnen pas wanneer de benodigde klanken zijn aangeboden.</p>`;
+    body.appendChild(kern);
   }
   const set = el('section');
   set.innerHTML = `<h3>Instellingen</h3>
@@ -895,7 +903,7 @@ function goParent(tabId = null) {
     <p>1. Open deze pagina één keer in Safari mét internet en wacht tot hieronder "Offline klaar" staat.<br>2. Tik op <b>Deel</b> (vierkantje met pijl) → <b>Zet op beginscherm</b>.<br>3. Start De Letterdief voortaan vanaf het beginscherm; hij werkt dan zonder internet.</p>
     <p>Status: <b>${S.swReady ? '✅ Offline klaar' : navigator.onLine ? '⏳ nog bezig of niet beschikbaar in deze modus' : '📴 offline'}</b> · versie ${VERSION}</p>
     <h3>Over het spel</h3>
-    <p class="small-note">De letters volgen de volgorde van Veilig Leren Lezen (kim-versie). Het spel zegt klanken (mmm) en geen letternamen (em), past de moeilijkheid aan naar ongeveer 80% goed, en doet het goede antwoord voor. Advies: 10–15 minuten per dag. Woorden en zinnen: Nederlandse stemmen Fenna en Maarten. Losse klanken: fonetische spraak. Alle opnamen werken offline. Lettertype Andika (SIL OFL).</p>`;
+    <p class="small-note">De letters volgen de volgorde van Veilig Leren Lezen (kim-versie). De politieauto rijdt vanzelf; het kind kiest alleen een baan en springt. De bochtige, hobbelige weg verandert dus niet wat het kind moet doen. Het spel zegt klanken (mmm) en geen letternamen (em), past de moeilijkheid aan naar ongeveer 80% goed, en doet het goede antwoord voor. Advies: 10–15 minuten per dag. Woorden en zinnen: Nederlandse stemmen Fenna en Maarten. Losse klanken: fonetische spraak. Alle opnamen werken offline. Lettertype Andika (SIL OFL).</p>`;
   body.appendChild(info);
   const danger = el('section');
   danger.innerHTML = '<h3>Beheer</h3>';

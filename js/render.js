@@ -174,82 +174,67 @@ function drawScenery(ctx, ch, x, groundY, px, theme, alpha = 1) {
   ctx.restore();
 }
 
-// ---------- het monster van het kind ----------
-// look: { color, hat, glasses, cape }  ·  opts: { facing: 'front'|'back', phase, mood, blink }
+// ---------- de politieauto van het kind ----------
+// Bestaande profielvelden blijven bruikbaar: color = accentkleur, cape = racestreep,
+// hat/glasses = vrolijke garageversieringen. Zo blijft oude voortgang intact.
 export function drawHero(ctx, x, y, size, look, opts = {}) {
   const { facing = 'front', phase = 0, mood = 'happy', tilt = 0, squash = 0 } = opts;
-  const color = look.color || '#ff7a59';
-  const u = size / 2; // body-halfbreedte
+  const color = look.color || '#2f80ed';
+  const u = size / 2;
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(tilt);
-  const step = Math.sin(phase), bob = Math.abs(Math.cos(phase)) * u * 0.08;
-  const by = -u * 1.05 - bob; // midden van het lijf
+  ctx.scale(1, 1 + squash * 0.035);
+  const bob = Math.abs(Math.sin(phase * 0.55)) * u * 0.045;
+  const by = -bob;
   const capeItem = SHOP.find(s => s.id === look.cape);
-  // cape achter het lijf (bij voorkant alleen randjes zichtbaar)
-  if (capeItem && facing === 'back') {
-    const flap = Math.sin(phase * 2) * u * 0.12;
-    ctx.beginPath();
-    ctx.moveTo(-u * 0.55, by - u * 0.55);
-    ctx.quadraticCurveTo(-u * 1.0 - flap, by + u * 0.4, -u * 0.8 - flap, by + u * 1.05);
-    ctx.lineTo(u * 0.8 + flap, by + u * 1.05);
-    ctx.quadraticCurveTo(u * 1.0 + flap, by + u * 0.4, u * 0.55, by - u * 0.55);
-    ctx.closePath();
-    ctx.fillStyle = capeFill(ctx, capeItem, -u, by - u, u * 2);
-    ctx.fill();
-  } else if (capeItem) {
-    ctx.beginPath();
-    ctx.moveTo(-u * 0.6, by - u * 0.5); ctx.lineTo(-u * 1.05, by + u * 0.95); ctx.lineTo(u * 1.05, by + u * 0.95); ctx.lineTo(u * 0.6, by - u * 0.5); ctx.closePath();
-    ctx.fillStyle = capeFill(ctx, capeItem, -u, by - u, u * 2); ctx.fill();
+  const stripe = capeItem ? capeFill(ctx, capeItem, -u, -u, u * 2) : color;
+  // Wielen en spatborden.
+  for (const side of [-1, 1]) {
+    ellipse(ctx, side * u * .72, by - u * .18, u * .25, u * .29, '#26313b');
+    ellipse(ctx, side * u * .72, by - u * .18, u * .1, u * .13, '#92a2ad');
   }
-  // voeten
-  const footY = -u * 0.12;
-  ellipse(ctx, -u * 0.42, footY - Math.max(0, step) * u * 0.28, u * 0.3, u * 0.19, shade(color, -45));
-  ellipse(ctx, u * 0.42, footY - Math.max(0, -step) * u * 0.28, u * 0.3, u * 0.19, shade(color, -45));
-  // armpjes
-  ellipse(ctx, -u * 0.98, by + u * 0.15 + step * u * 0.18, u * 0.2, u * 0.32, shade(color, -25), 0.4 + step * 0.3);
-  ellipse(ctx, u * 0.98, by + u * 0.15 - step * u * 0.18, u * 0.2, u * 0.32, shade(color, -25), -0.4 - step * 0.3);
-  // oortjes
-  ellipse(ctx, -u * 0.55, by - u * 0.95, u * 0.22, u * 0.3, shade(color, -20), -0.35);
-  ellipse(ctx, u * 0.55, by - u * 0.95, u * 0.22, u * 0.3, shade(color, -20), 0.35);
-  // lijf
-  const g = ctx.createRadialGradient(-u * 0.3, by - u * 0.4, u * 0.1, 0, by, u * 1.2);
-  g.addColorStop(0, shade(color, 45)); g.addColorStop(1, color);
-  ellipse(ctx, 0, by, u * (1 + squash * 0.1), u * (1.05 - squash * 0.1), g);
+  // Carrosserie met een vriendelijke, stevige prentenboekvorm.
+  rrect(ctx, -u, by - u * .76, u * 2, u * .62, u * .2);
+  ctx.fillStyle = '#f7fbff'; ctx.fill();
+  rrect(ctx, -u * .94, by - u * .69, u * 1.88, u * .3, u * .12);
+  ctx.fillStyle = '#287ac0'; ctx.fill();
+  path(ctx, [[-u * .66, by - u * .74], [-u * .43, by - u * 1.23], [u * .43, by - u * 1.23], [u * .66, by - u * .74]], '#edf5fb');
+  // Voor- of achterruit. De ogen in de voorruit maken de auto benaderbaar voor kleuters.
   if (facing === 'front') {
-    ellipse(ctx, 0, by + u * 0.35, u * 0.58, u * 0.5, shade(color, 60));
-    // ogen
-    const ey = by - u * 0.22, blink = opts.blink ? 0.15 : 1;
+    path(ctx, [[-u * .39, by - u * .78], [-u * .28, by - u * 1.12], [u * .28, by - u * 1.12], [u * .39, by - u * .78]], '#7fc4dc');
+    const ey = by - u * .94, blink = opts.blink ? .15 : 1;
     for (const s of [-1, 1]) {
-      ellipse(ctx, s * u * 0.34, ey, u * 0.24, u * 0.3 * blink, '#fff');
-      if (blink > 0.5) {
-        ellipse(ctx, s * u * 0.31, ey + u * 0.05, u * 0.13, u * 0.16, '#1f2335');
-        ellipse(ctx, s * u * 0.27, ey - u * 0.02, u * 0.05, u * 0.05, '#fff');
-      }
+      ellipse(ctx, s * u * .17, ey, u * .105, u * .12 * blink, '#fff');
+      if (blink > .5) ellipse(ctx, s * u * .16, ey + u * .01, u * .052, u * .065, '#173248');
     }
-    // wangetjes
-    ellipse(ctx, -u * 0.62, by + u * 0.12, u * 0.14, u * 0.08, 'rgba(255,90,120,.35)');
-    ellipse(ctx, u * 0.62, by + u * 0.12, u * 0.14, u * 0.08, 'rgba(255,90,120,.35)');
-    // mond
-    ctx.lineWidth = u * 0.08; ctx.lineCap = 'round'; ctx.strokeStyle = '#1f2335';
+    ellipse(ctx, -u * .72, by - u * .48, u * .14, u * .09, '#fff3a6');
+    ellipse(ctx, u * .72, by - u * .48, u * .14, u * .09, '#fff3a6');
+    path(ctx, [[-u * .09, by - u * .68], [0, by - u * .76], [u * .09, by - u * .68], [u * .055, by - u * .55], [-u * .055, by - u * .55]], '#ffd54f');
+    ctx.lineWidth = u * .045; ctx.lineCap = 'round'; ctx.strokeStyle = '#173248';
     ctx.beginPath();
-    if (mood === 'wow') { ellipse(ctx, 0, by + u * 0.2, u * 0.12, u * 0.15, '#1f2335'); }
-    else if (mood === 'sad') { ctx.arc(0, by + u * 0.32, u * 0.18, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke(); }
-    else { ctx.arc(0, by + u * 0.08, u * 0.22, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke(); }
+    if (mood === 'wow') ellipse(ctx, 0, by - u * .32, u * .07, u * .09, '#173248');
+    else if (mood === 'sad') { ctx.arc(0, by - u * .25, u * .14, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke(); }
+    else { ctx.arc(0, by - u * .4, u * .15, Math.PI * .12, Math.PI * .88); ctx.stroke(); }
     const glasses = SHOP.find(s => s.id === look.glasses);
-    if (glasses) drawEmoji(ctx, glasses.icon, 0, ey + u * 0.02, u * 1.05);
+    if (glasses) drawEmoji(ctx, glasses.icon, 0, ey, u * .65);
   } else {
-    // vlekjes op de rug en een pluizig staartje
-    ellipse(ctx, -u * 0.3, by - u * 0.35, u * 0.12, u * 0.1, shade(color, 22));
-    ellipse(ctx, u * 0.25, by - u * 0.1, u * 0.09, u * 0.08, shade(color, 22));
-    ellipse(ctx, 0, by + u * 0.72, u * 0.24, u * 0.22, shade(color, 55));
-    ellipse(ctx, -u * 0.06, by + u * 0.66, u * 0.1, u * 0.08, shade(color, 80));
-    if (capeItem) {
-      ctx.beginPath(); ctx.moveTo(-u * 0.5, by - u * 0.6); ctx.lineTo(u * 0.5, by - u * 0.6); ctx.lineWidth = u * 0.12; ctx.strokeStyle = shade(capeItem.color === 'rainbow' ? '#ef4444' : capeItem.color, -30); ctx.stroke();
-    }
+    path(ctx, [[-u * .39, by - u * .78], [-u * .28, by - u * 1.12], [u * .28, by - u * 1.12], [u * .39, by - u * .78]], '#5c8295');
+    ellipse(ctx, -u * .72, by - u * .48, u * .14, u * .085, '#ff6b6b');
+    ellipse(ctx, u * .72, by - u * .48, u * .14, u * .085, '#ff6b6b');
+    rrect(ctx, -u * .2, by - u * .5, u * .4, u * .18, u * .05); ctx.fillStyle = '#ffe49b'; ctx.fill();
+    path(ctx, [[-u * .08, by - u * .7], [0, by - u * .77], [u * .08, by - u * .7], [u * .05, by - u * .59], [-u * .05, by - u * .59]], '#ffd54f');
   }
+  // Kleine profielaccenten, zonder een rood kruis/ambulancevorm te maken.
+  rrect(ctx, -u * .86, by - u * .64, u * .22, u * .09, u * .03); ctx.fillStyle = stripe; ctx.fill();
+  rrect(ctx, u * .64, by - u * .64, u * .22, u * .09, u * .03); ctx.fillStyle = stripe; ctx.fill();
+  // Knipperend zwaailicht.
+  const pulse = .62 + .38 * Math.sin(phase * 2.8);
+  rrect(ctx, -u * .34, by - u * 1.34, u * .68, u * .13, u * .045); ctx.fillStyle = '#293b54'; ctx.fill();
+  rrect(ctx, -u * .31, by - u * 1.32, u * .3, u * .1, u * .035); ctx.fillStyle = `rgba(255,70,70,${.75 + pulse * .2})`; ctx.fill();
+  rrect(ctx, u * .01, by - u * 1.32, u * .3, u * .1, u * .035); ctx.fillStyle = `rgba(55,145,255,${.95 - pulse * .2})`; ctx.fill();
   const hat = SHOP.find(s => s.id === look.hat);
-  if (hat) drawEmoji(ctx, hat.icon, 0, by - u * 1.05, u * 1.1);
+  if (hat) drawEmoji(ctx, hat.icon, u * .58, by - u * .63, u * .35);
   ctx.restore();
 }
 function capeFill(ctx, item, x, y, w) {
@@ -367,6 +352,13 @@ export function drawNet(ctx, x, y, size, t) {
 
 const decoSize = ch => (SMALL_DECO.has(ch) ? 1.1 + Math.random() * 0.6 : 2.6 + Math.random() * 1.6);
 
+// De bocht en hoogte zijn alleen visueel: alle drie de banen en botsingen blijven
+// exact gelijk. Daardoor voelt de achtervolging levendiger zonder lastig sturen.
+const curveWave = q => Math.sin(q * .052) * 1.55 + Math.sin(q * .019 + 1.3) * .8;
+const riseWave = q => Math.sin(q * .105 + .5) * .23 + Math.sin(q * .037) * .14;
+export const roadOffset = (z, dist = 0) => z <= 0 ? 0 : (curveWave(dist + z) - curveWave(dist)) * (1 - Math.exp(-z * .08));
+export const roadRise = (z, dist = 0) => z <= 0 ? 0 : (riseWave(dist + z) - riseWave(dist)) * (1 - Math.exp(-z * .12));
+
 // ---------- de wereld ----------
 export class Renderer {
   constructor(canvas) {
@@ -400,7 +392,8 @@ export class Renderer {
     const zc = z + D0;
     if (zc < 0.6) return null;
     const s = this.F / zc;
-    return { x: this.W / 2 + (x - this.camX) * s, y: this.horizon + (CAM_H - y) * s, s };
+    const dist = this.scrollDist || 0;
+    return { x: this.W / 2 + (x + roadOffset(z, dist) - this.camX) * s, y: this.horizon + (CAM_H - y - roadRise(z, dist)) * s, s };
   }
   laneAt(screenX) {
     // Welke baan hoort bij een tik op het scherm (gemeten op de hoogte van de held).
@@ -424,6 +417,7 @@ export class Renderer {
     if (this.shake > 0) { this.shake -= dt; sx = (Math.random() - 0.5) * 10 * this.shake; sy = (Math.random() - 0.5) * 10 * this.shake; }
     ctx.save(); ctx.translate(sx, sy);
     const dist = run ? run.dist : state.t * 3;
+    this.scrollDist = dist;
     const t = state.t;
     // lucht
     const sky = ctx.createLinearGradient(0, 0, 0, this.horizon);

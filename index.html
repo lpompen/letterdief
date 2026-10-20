@@ -8,7 +8,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Letterdief">
-  <meta name="description" content="De Letterdief: een leesspel voor kinderen van 4 tot 6 jaar. Pak de letters terug van Snaai! Werkt offline op de iPad.">
+  <meta name="description" content="De Letterdief: een leesspel voor kinderen van 5 tot 6 jaar. Achtervolg letterboef Snaai met jouw politieauto. Werkt offline op de iPad.">
   <title>De Letterdief</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" href="./assets/icon-192.png">
@@ -32,9 +32,9 @@
 
     <section id="scr-title" class="screen">
       <div class="title-copy">
-        <p class="title-eyebrow"><span aria-hidden="true">✦</span> Een vrolijk letteravontuur</p>
+        <p class="title-eyebrow"><span aria-hidden="true">🚨</span> De vrolijke letterpolitie</p>
         <h1 class="logo"><span>De</span> Letterdief<span class="logo-swish" aria-hidden="true"></span></h1>
-        <p class="tagline">Snaai heeft de letters gepikt.<br>Pak jij ze terug?</p>
+        <p class="tagline">Letterboef Snaai is ervandoor.<br>Pak jij de letters terug?</p>
         <button id="btn-start" class="big-play" aria-label="Start"><span class="play-icon" aria-hidden="true">▶</span><span>Spelen</span></button>
         <p class="title-footnote">Luister, ontdek en lees mee</p>
       </div>
@@ -71,8 +71,8 @@
       <div id="map-path" class="map-path"></div>
       <nav class="map-bottom" aria-label="Ontdekken">
         <button id="btn-book" class="round nav-card" aria-label="Woordenboek"><span aria-hidden="true">📖</span><span class="nav-label">Mijn woorden</span></button>
-        <button id="btn-endless" class="round nav-card" aria-label="Vrij rennen"><span aria-hidden="true">🏃</span><span class="nav-label">Vrij rennen</span></button>
-        <button id="btn-shop" class="round nav-card" aria-label="Winkel"><span aria-hidden="true">🛍️</span><span class="nav-label">Winkel</span></button>
+        <button id="btn-endless" class="round nav-card" aria-label="Vrije patrouille"><span aria-hidden="true">🚓</span><span class="nav-label">Vrije patrouille</span></button>
+        <button id="btn-shop" class="round nav-card" aria-label="Garage"><span aria-hidden="true">🧰</span><span class="nav-label">Garage</span></button>
         <button class="round small" data-gate="parent" aria-label="Voor ouders">⚙️</button>
       </nav>
     </section>
@@ -83,7 +83,7 @@
     </section>
 
     <section id="scr-shop" class="screen hidden">
-      <header class="sub-top"><button class="round small back" aria-label="Terug">⬅️</button><h2>🛍️</h2><div class="pill">🪙 <b id="shop-coins">0</b></div></header>
+      <header class="sub-top"><button class="round small back" aria-label="Terug">⬅️</button><h2>🧰 Garage</h2><div class="pill">🪙 <b id="shop-coins">0</b></div></header>
       <div class="shop-body">
         <canvas id="shop-hero" class="hero-preview"></canvas>
         <div id="shop-grid" class="shop-grid"></div>

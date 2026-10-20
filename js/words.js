@@ -57,6 +57,12 @@ export const WORDS = [
   { w: 'hoed', g: ['h', 'oe', 'd'], e: '🎩', nz: [2] },
   { w: 'bed', g: ['b', 'e', 'd'], e: '🛏️', nz: [2] },
   { w: 'brood', g: ['b', 'r', 'oo', 'd'], e: '🍞', nz: [3] },
+  // Kern 3 - thema "Hoe voel jij je?" uit de ouderbrief.
+  { w: 'pijn', g: ['p', 'ij', 'n'], e: '🤕' },
+  { w: 'boos', g: ['b', 'oo', 's'], e: '😠' },
+  { w: 'zeer', g: ['z', 'ee', 'r'], e: '🩹' },
+  { w: 'hoest', g: ['h', 'oe', 's', 't'], e: '🤧' },
+  { w: 'rit', g: ['r', 'i', 't'], e: '🎢' },
   // wereld 4 (+ w o a u j)
   { w: 'zon', g: ['z', 'o', 'n'], e: '☀️' },
   { w: 'bus', g: ['b', 'u', 's'], e: '🚌' },

@@ -2,7 +2,7 @@
   "id": "./",
   "name": "De Letterdief",
   "short_name": "Letterdief",
-  "description": "Leesspel voor kinderen van 4 tot 6 jaar: pak de letters terug van Snaai!",
+  "description": "Leesspel voor kinderen van 5 tot 6 jaar: achtervolg letterboef Snaai met jouw politieauto.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "fullscreen",

@@ -1,5 +1,5 @@
 // De Letterdief — vaste inhoud: klanken, werelden, levels en gesproken zinnen.
-export const VERSION = '1.1.0';
+export const VERSION = '1.2.0';
 
 // Lettervolgorde volgens Veilig Leren Lezen (kim-versie), één wereld per kern.
 // Binnen wereld 0 eerst m en s: die klanken zijn te rekken en dus het best hoorbaar voor kleuters.
@@ -13,6 +13,16 @@ export const WORLD_LETTERS = [
   ['g', 'au', 'ui', 'f', 'ei'],
   ['sch', 'ng', 'nk', 'ch'],
 ];
+
+// Kern 3 uit de ouderbrief (Veilig Leren Lezen): zichtbaar in het oudermenu en
+// als vaste inhoud bewaakt door tests. De zonwoorden komen later als bonus aan
+// bod, zodra alle benodigde klanken zijn aangeboden.
+export const KERN3 = {
+  theme: 'Hoe voel jij je?',
+  letters: ['d', 'oe', 'z', 'ij', 'h'],
+  practice: ['doos', 'poes', 'koe', 'ijs', 'zeep', 'boek', 'koek', 'soep', 'zee', 'haas', 'zes', 'pijn', 'boos', 'zeer', 'hoest'],
+  stretch: ['schoen', 'ring', 'slang', 'bank', 'koud', 'web', 'krab'],
+};
 
 export const GRAPHEMES = WORLD_LETTERS.flat();
 export const WORLD_OF = Object.fromEntries(WORLD_LETTERS.flatMap((list, w) => list.map(g => [g, w])));
@@ -38,7 +48,7 @@ export const WORLDS = [
     deco: ['🌴', '⛱️', '🌴', '🐚', '🦀', '🌴'], obstacle: '🏰', hills: '#4fb5e8' },
   { name: 'De Boerderij', icon: '🚜', sky: ['#9edcff', '#f2fbff'], ground: '#8fd14f', ground2: '#82c243', road: '#cfa874', road2: '#c29a65', edge: '#9d7648',
     deco: ['🌻', '🏡', '🌾', '🐑', '🌻', '🌳'], obstacle: '🪣', hills: '#a6d86b' },
-  { name: 'De Drukke Stad', icon: '🏙️', sky: ['#a9ddff', '#eef8ff'], ground: '#c7ced6', ground2: '#bcc4cd', road: '#6b7280', road2: '#646b78', edge: '#e8ecf0',
+  { name: 'De Letterpatrouille', icon: '🚓', sky: ['#a9ddff', '#eef8ff'], ground: '#c7ced6', ground2: '#bcc4cd', road: '#596577', road2: '#505b6b', edge: '#f0f4f8',
     deco: ['🏠', '🏢', '🌳', '🚦', '🏪', '🏠'], obstacle: '🚧', hills: '#9fb4c9' },
   { name: 'De Sneeuwberg', icon: '⛄', sky: ['#bfe3ff', '#f7fbff'], ground: '#f3f8fc', ground2: '#e6eef6', road: '#bfe0f0', road2: '#b0d6ea', edge: '#8fb9d3',
     deco: ['🌲', '⛄', '🌲', '🏔️', '❄️', '🌲'], obstacle: '🧊', hills: '#dbe9f5' },
@@ -89,15 +99,15 @@ export const SHOP = [
 
 // Gesproken zinnen. v = stem: n = verteller, s = Snaai.
 export const PHRASES = {
-  welkom: ['n', 'Hoi! Fijn dat je er bent.'],
-  wie: ['n', 'Wie gaat er spelen? Tik op jouw monster.'],
-  nieuw_monster: ['n', 'Kies een kleur voor jouw monster.'],
+  welkom: ['n', 'Hoi letteragent! Fijn dat je er bent.'],
+  wie: ['n', 'Wie gaat er spelen? Tik op jouw politieauto.'],
+  nieuw_monster: ['n', 'Kies een kleur voor jouw politieauto.'],
   kaart: ['n', 'Tik op een rondje om te spelen.'],
-  intro1: ['n', 'Oh nee! Snaai de letterdief pikt letters uit de woorden.'],
-  intro2: ['n', 'Snaai kan niet lezen. Hij vindt letters gewoon mooi en glimmend.'],
-  intro3: ['n', 'Ren achter hem aan en pak de letters terug!'],
+  intro1: ['n', 'Oh nee! Snaai de letterboef pikt letters uit de woorden.'],
+  intro2: ['n', 'Jij bent de letterpolitie. Zet je zwaailicht aan!'],
+  intro3: ['n', 'Rijd achter hem aan en pak de letters terug!'],
   oh_nee: ['n', 'Oh nee! Snaai heeft letters gepikt!'],
-  uitleg_tik: ['n', 'Tik op de weg om naar links of rechts te gaan.'],
+  uitleg_tik: ['n', 'Tik op de weg om de politieauto naar links of rechts te sturen.'],
   uitleg_spring: ['n', 'Veeg omhoog om te springen.'],
   pak_de: ['n', 'Pak de'],
   welke_mist: ['n', 'Welke letter mist er?'],
@@ -130,11 +140,11 @@ export const PHRASES = {
   hier_staat: ['n', 'Hier staat'],
   pauze: ['n', 'Tijd voor een pauze! Snaai gaat ook even slapen. Tot straks!'],
   wereld_open: ['n', 'Hoera, een nieuwe wereld!'],
-  winkel: ['n', 'Kies iets moois voor je monster.'],
+  winkel: ['n', 'Kies iets moois voor je politieauto.'],
   te_duur: ['n', 'Nog niet genoeg muntjes. Verzamel er meer tijdens het rennen!'],
   gekocht: ['n', 'Wat mooi!'],
   boek: ['n', 'Dit zijn al jouw woorden. Tik erop om ze te horen.'],
-  vrij: ['n', 'Hoe ver kom jij? Pak de goede letters!'],
+  vrij: ['n', 'Hoe ver rijdt jouw patrouille? Pak de goede letters!'],
   record: ['n', 'Nieuw record!'],
   welkom_terug: ['n', 'Welkom terug! Snaai heeft weer letters gepikt.'],
   klaar_vrij: ['n', 'Goed gerend!'],
